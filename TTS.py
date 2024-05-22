@@ -22,7 +22,7 @@ if sys.platform == "win32":
 
 
 # Audio recording parameters
-STREAMING_LIMIT = 15 * 1000  # 15 seconds
+STREAMING_LIMIT = 5 * 1000  # 15 seconds
 SAMPLE_RATE = 16000
 CHUNK_SIZE = int(SAMPLE_RATE / 10)  # 100ms
 
