@@ -1,0 +1,10 @@
+{
+    "API_KEY" : "API_KEY",
+    "PROJECT_ID" : "PROJECT_ID",
+
+    "ASSISTANT_ID" : "ASSISTANT_ID",
+    "THREAD_ID" : "THREAD_ID",
+
+    "KEY_TO_HOLD" : "t",
+    "MODEL" : "whisper-1"
+}
