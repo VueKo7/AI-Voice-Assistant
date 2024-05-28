@@ -7,4 +7,4 @@ then active the venv by running:
 then install the requirements by running:
 >pip install -r requirements.txt
 
-now go in the settings.json file and update the field with your own info
+now update the fields of the settings.json with your own info
