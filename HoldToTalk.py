@@ -31,6 +31,7 @@ def callAssistant(transcription):
     run = client.beta.threads.runs.create_and_poll(
     thread_id=THREAD_ID,
     assistant_id=ASSISTANT_ID,
+    model="gpt-3.5-turbo"
     )
     
     if run.status == 'completed': 
@@ -104,13 +105,11 @@ def transcribe_audio(file_path):
 
     if response.status_code == 200:
         text = response.json().get('text', '').strip()
-        if text and text != "Sottotitoli creati dalla comunità Amara.org":
+        if text:
             return text
         else:
             return ""
     else:
-        print(f"Error: {response.status_code}")
-        print(response.json())
         return ""
 
 # Programma principale
