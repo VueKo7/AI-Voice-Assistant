@@ -1,5 +1,6 @@
 import io
 import json
+
 file = io.open("settings.json", "r")
 file = file.read()
 fjson = json.loads(file)
@@ -23,15 +24,15 @@ client = OpenAI(
 def callAssistant(transcription):
     
     client.beta.threads.messages.create(
-    thread_id=THREAD_ID,
-    role="user",
-    content=transcription
+        thread_id=THREAD_ID,
+        role="user",
+        content=transcription
     )
     
     run = client.beta.threads.runs.create_and_poll(
-    thread_id=THREAD_ID,
-    assistant_id=ASSISTANT_ID,
-    model="gpt-3.5-turbo"
+        thread_id=THREAD_ID,
+        assistant_id=ASSISTANT_ID,
+        model="gpt-3.5-turbo"
     )
     
     if run.status == 'completed': 
@@ -99,7 +100,7 @@ def transcribe_audio(file_path):
     files = {
         'file': open(file_path, 'rb'),
         'model': (None, MODEL),
-        'language': (None, 'it')  # Impostazione della lingua su italiano
+        'language': (None, 'en')  # Impostazione della lingua su inglese
     }
     response = requests.post('https://api.openai.com/v1/audio/transcriptions', headers=headers, files=files)
 
@@ -111,6 +112,51 @@ def transcribe_audio(file_path):
             return ""
     else:
         return ""
+    
+import requests
+import pygame
+import time
+
+file_path = "output.mp3"
+
+def text_to_speech(text):
+    # Codice per ottenere il file audio dal client e salvarlo
+    response = client.audio.speech.create(
+        model="tts-1-hd",
+        voice="nova",
+        input=text,
+        response_format="mp3"
+    )
+
+    # Salvataggio del file audio
+    with open(file_path, "wb") as file:
+        file.write(response.content)  # Usare .content se response è un oggetto della libreria requests
+    
+    # Aggiungi un piccolo ritardo per garantire che il file sia completamente salvato e chiuso
+    time.sleep(1)
+
+
+
+def play_audio():
+    # Inizializzazione di pygame mixer
+    pygame.mixer.init()
+
+    # Caricamento del file audio
+    pygame.mixer.music.load(file_path)
+
+    # Riproduzione del file audio
+    pygame.mixer.music.play()
+
+    # Aspetta fino alla fine della riproduzione dell'audio
+    while pygame.mixer.music.get_busy():
+        time.sleep(0.1)
+    
+    # Scarica il mixer per rilasciare il file
+    pygame.mixer.music.unload()
+    pygame.mixer.quit()
+
+
+    
 
 # Programma principale
 print("Press and hold " + KEY_TO_HOLD + " to start recording...")
@@ -127,7 +173,13 @@ while True:
             # send the text to the assistant and get the response
             response = callAssistant(transcription)
             print("Assistant: " + response)
+            
+            text_to_speech(response)
+            play_audio()
+            
                 
         print("Press and hold " + KEY_TO_HOLD + " to start recording again...")
     
     time.sleep(0.1)  # Piccola pausa per evitare un utilizzo eccessivo della CPU
+
+
