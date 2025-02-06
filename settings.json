@@ -1,7 +1,5 @@
 {
-    "API_KEY" : "API_KEY",
-    "PROJECT_ID" : "PROJECT_ID",
-
-    "ASSISTANT_ID" : "ASSISTANT_ID",
-    "THREAD_ID" : "THREAD_ID"
+    "DEEP_KEY": "your_deepseek_key",
+    "OPEN_KEY": "your_openai_key"
 }
+  
