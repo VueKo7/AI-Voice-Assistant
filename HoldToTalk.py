@@ -110,56 +110,62 @@ def record_audio(filename="recording.wav", format=pyaudio.paInt16, channels=1, r
     frames = []
 
     while keyboard.is_pressed('t'):
-        try:
-            data = stream.read(chunk)
-            frames.append(data)
-        except Exception as e:
-            logging.error(f"Errore durante la registrazione audio: {e}")
-            break
+        data = stream.read(CHUNK)
+        frames.append(data)
 
     logging.info("Registrazione terminata.")
     stream.stop_stream()
     stream.close()
     audio.terminate()
 
-    try:
-        with wave.open(filename, 'wb') as wf:
-            wf.setnchannels(channels)
-            wf.setsampwidth(audio.get_sample_size(format))
-            wf.setframerate(rate)
-            wf.writeframes(b''.join(frames))
-    except Exception as e:
-        logging.error(f"Errore nel salvataggio del file audio: {e}")
-    return filename
+    # Salvataggio del file audio
+    with wave.open(WAVE_OUTPUT_FILENAME, 'wb') as wf:
+        wf.setnchannels(CHANNELS)
+        wf.setsampwidth(audio.get_sample_size(FORMAT))
+        wf.setframerate(RATE)
+        wf.writeframes(b''.join(frames))
 
-def main():
-    # Caricamento delle impostazioni
-    settings = load_settings()
-    OPEN_KEY = settings.get("OPEN_KEY")
-    DEEP_KEY = settings.get("DEEP_KEY")
-    
-    if not OPEN_KEY or not DEEP_KEY:
-        logging.error("Assicurarsi che 'OPEN_KEY' e 'DEEP_KEY' siano presenti nel file di configurazione.")
-        return
+# Funzione per inviare audio all'API di OpenAI Whisper
+def transcribe_audio(file_path):
+    api_key = API_KEY
+    headers = {
+        'Authorization': f'Bearer {api_key}',
+    }
+    files = {
+        'file': open(file_path, 'rb'),
+        'model': (None, 'whisper-1'),
+        'language': (None, 'it')  # Impostazione della lingua su italiano
+    }
+    response = requests.post('https://api.openai.com/v1/audio/transcriptions', headers=headers, files=files)
 
-    logging.info("Premere e tenere premuto 'T' per iniziare la registrazione...")
+    if response.status_code == 200:
+        text = response.json().get('text', '').strip()
+        if text:
+            return text
+        else:
+            return "Non sono riuscito a capire"
+    else:
+        print(f"Error: {response.status_code}")
+        print(response.json())
+        return "Non sono riuscito a capire"
 
-    while True:
-        if keyboard.is_pressed('t'):
-            # Registra l'audio
-            audio_file = record_audio()
-            
-            # Trascrive l'audio tramite OpenAI Whisper
-            transcription = transcribe_audio(audio_file, OPEN_KEY)
-            logging.info(f"Utente: {transcription}")
-            
-            # Invia la trascrizione a DeepSeek per ottenere la risposta
-            response_text = call_assistant(transcription, DEEP_KEY)
-            logging.info(f"Assistente: {response_text}")
-            
-            logging.info("Premere e tenere premuto 'T' per una nuova registrazione...")
+# Programma principale
+print("Press and hold 'T' to start recording...")
+
+while True:
+    if keyboard.is_pressed('t'):
+        record_audio()
         
-        time.sleep(0.1)
+        # get the speech to text
+        transcription = transcribe_audio(WAVE_OUTPUT_FILENAME)
+        print("User: " + transcription)
+        
+        
 
-if __name__ == '__main__':
-    main()
+        # send the text to the assistant and get the response
+        response = callAssistant(transcription)
+        print("Assistant: " + response)
+                
+        print("Press and hold 'T' to start recording again...")
+    
+    time.sleep(0.1)  # Piccola pausa per evitare un utilizzo eccessivo della CPU
